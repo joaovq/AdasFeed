@@ -13,11 +13,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 import com.victor.adasfeed.passandodados.User
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 
 const val EXTRA_KEY = "EXTRA_KEY"
 
@@ -116,9 +114,30 @@ class FeedActivity : AppCompatActivity() {
         // layoutmanager no código prioriza sobre o que está no XML
         val storiesLayoutManager = LinearLayoutManager(applicationContext)
         storiesLayoutManager.orientation = LinearLayoutManager.HORIZONTAL
+        val onClick : (Post,Int, View) -> Unit = {
+            post, position, view ->
+            lifecycleScope.launch{
+                val snackbar = Snackbar.make(view, "Post deletado", 5000)
+                snackbar.setAction("DESFAZER"){
+                    this.cancel()
+                    postAdapter.notifyItemInserted(position)
+                }
+                snackbar.setAnchorView(R.id.buttonNewPost)
+                snackbar.show()
+                delay(5000)
+                postAdapter.removePost(position)
+            }
+           /* postAdapter.removePost(position = position)
+            val snackbar = Snackbar.make(view, "Post deletado", 5000)
+            snackbar.setAction("DESFAZER"){
+                postAdapter.addNewPostWithIndex(post,position)
+            }
+            snackbar.setAnchorView(R.id.buttonNewPost)
+            snackbar.show()*/
+        }
 
         storiesAdapter = StoriesAdapter()
-        postAdapter = PostAdapter()
+        postAdapter = PostAdapter(onLongClick = onClick)
 
         rvStories.apply {
             adapter = storiesAdapter

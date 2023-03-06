@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
@@ -14,7 +15,7 @@ data class Post(
     val description: String,
     val imagePost: Int,
     val imageUser: Int,
-    val isLiked: Boolean = false,
+    var isLiked: Boolean = false,
     val isFavorite: Boolean = false,
 )
 
@@ -75,7 +76,10 @@ private fun mockedPostList() = mutableListOf(
 
 )
 
-class PostAdapter(private val postList: MutableList<Post> = mockedPostList()) :
+class PostAdapter(private val postList: MutableList<Post> = mockedPostList(),
+                  private var onLongClick : (post : Post, position : Int,view : View) -> Unit,
+                  private val listPostsLiked : ArrayList<Post> = arrayListOf()
+) :
     RecyclerView.Adapter<PostViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PostViewHolder {
         val postView =
@@ -92,13 +96,36 @@ class PostAdapter(private val postList: MutableList<Post> = mockedPostList()) :
         holder.imageUser.setImageResource(postList[position].imageUser)
 
         holder.imageLiked.setOnClickListener {
-            holder.imageLiked.setImageResource(R.drawable.liked_fill)
+            postList[position].isLiked = postList[position].isLiked.not()
+            if (postList[position].isLiked){
+                holder.imageLiked.setImageResource(R.drawable.liked_fill)
+                listPostsLiked.add(postList[position])
+                Toast.makeText(it.context, "$listPostsLiked", Toast.LENGTH_SHORT).show()
+            } else {
+                listPostsLiked.remove(postList[position])
+                holder.imageLiked.setImageResource(R.drawable.liked1)
+            }
+        }
+        holder.itemView.setOnLongClickListener {
+              onLongClick(postList[position], position, it)
+                true
         }
     }
-
+    fun removePost(position: Int) {
+        postList.removeAt(position)
+        notifyItemRemoved(position)
+        // perde performance pois recria a lista inteira
+        // o DiffUtilCallback é melhor
+    }
     fun addNewPost(newPost: Post) {
         postList.add(newPost)
         notifyItemInserted(postList.indexOf(newPost))
+        // perde performance pois recria a lista inteira
+        // o DiffUtilCallback é melhor
+    }
+    fun addNewPostWithIndex(newPost: Post, index : Int) {
+        postList.add(index, newPost)
+        notifyItemInserted(index)
         // perde performance pois recria a lista inteira
         // o DiffUtilCallback é melhor
     }
@@ -152,4 +179,5 @@ class PostViewHolder(view: View) : ViewHolder(view) {
         imageLiked = view.findViewById(R.id.imageLiked)
         imageFavorite = view.findViewById(R.id.imageFavorite)
     }
+
 }
