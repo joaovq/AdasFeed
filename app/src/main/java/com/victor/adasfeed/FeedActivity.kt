@@ -120,7 +120,6 @@ class FeedActivity : AppCompatActivity() {
                 val snackbar = Snackbar.make(view, "Post deletado", 5000)
                 snackbar.setAction("DESFAZER"){
                     this.cancel()
-                    postAdapter.notifyItemInserted(position)
                 }
                 snackbar.setAnchorView(R.id.buttonNewPost)
                 snackbar.show()
